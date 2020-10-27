@@ -1,0 +1,178 @@
+import Persona.*
+import EnfermedadInfecciosa.*
+import EnfermedadAutoinmune.*
+import Medico.*
+import JefeDeDepartamento.*
+import GrupoSanguineo.*
+
+describe "Enfermedades Test" {
+
+	test "Frank contrae una malaria de 800 células" {
+		const frank = new Persona(cantidadDeCelulas = 3500000, grupoSanguineo = factorO)
+		const malaria800 = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 800)
+		frank.contraerEnfermedad(malaria800)
+		assert.that(frank.tiene(malaria800))
+	}
+	
+	test "Una malaria de 500 células amenazadas se reproduce" {
+		const malaria500 = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 500)
+		malaria500.reproducite()
+		assert.equals(1000, malaria500.cantidadCelulasAmenazadas())
+	}
+	
+	test "Se atenua la malaria en 100" {
+		const unaMalaria = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 1000)
+		unaMalaria.atenuar(100)
+		assert.equals(900, unaMalaria.cantidadCelulasAmenazadas())
+	}
+
+}
+
+describe "Tests de Logan viviendo un dia" {
+	
+	var malaria500 
+	var otitis
+	var lupus
+	var logan
+	fixture {
+		malaria500 = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 500)
+		otitis = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 100)
+		lupus = new EnfermedadAutoinmune(cantidadCelulasAmenazadas = 10000)
+		
+		logan = new Persona(enfermedades = [malaria500, otitis, lupus], cantidadDeCelulas = 3000000, grupoSanguineo = factorO)
+		logan.vivirUnDia()		
+	
+	}
+	
+	test "La cantidad de células afectadas de Logan que estén afectadas por enfermedades agresivas son 0" {
+		assert.equals(0, logan.celulasAfectadasPorEnfermedadesAgresivas())
+	}
+	
+	test "La enfermedad de logan que mas celulas afecta es el lupus" {
+		assert.equals(lupus, logan.enfermedadQueMasCelulasAfecta())
+	}
+	
+	test "Logan no esta en coma" {
+		assert.notThat(logan.estaEnComa())
+	}
+	
+}
+
+describe "Tests de Logan viviendo 31 dias" {
+	
+	var malaria500 
+	var otitis
+	var lupus
+	var logan
+	fixture {
+		malaria500 = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 500)
+		otitis = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 100)
+		lupus = new EnfermedadAutoinmune(cantidadCelulasAmenazadas = 10000)
+		
+		logan = new Persona(enfermedades = [malaria500, otitis, lupus], cantidadDeCelulas = 3000000, grupoSanguineo = factorO)
+		31.times({_ => logan.vivirUnDia()})
+	}
+	
+	test "La cantidad de células afectadas de Logan que estén afectadas por enfermedades agresivas son 10000 del lupus" {
+		assert.equals(10000, logan.celulasAfectadasPorEnfermedadesAgresivas())
+	}
+	
+	test "La enfermedad de logan que mas celulas afecta es el lupus" {
+		assert.equals(lupus, logan.enfermedadQueMasCelulasAfecta())
+	}
+	
+	test "Logan esta en coma" {
+		assert.that(logan.estaEnComa())
+	}
+}
+
+describe "Medicos atienden Personas" {
+
+	test "Cameron atiende a Logan" {
+		
+		const malaria500 = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 500)
+		const otitis = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 100)
+		const lupus = new EnfermedadAutoinmune(cantidadCelulasAmenazadas = 10000)
+		
+		const logan = new Persona(enfermedades = [malaria500, otitis, lupus], cantidadDeCelulas = 3000000, grupoSanguineo = factorO)
+		
+		const cameron = new Medico(dosis = 10, cantidadDeCelulas = 10000, grupoSanguineo = factorO)
+		
+		cameron.atenderA(logan)
+		
+		assert.equals([350, 10000 - 150], logan.enfermedades().map({unaEnfermedad => unaEnfermedad.cantidadCelulasAmenazadas()}))
+	}
+	
+	test "Hacer que House atienda a Cameron" {
+		
+		const malaria1000 = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 1000)
+		
+		const foreman = new Medico(dosis = 4, cantidadDeCelulas = 10000, grupoSanguineo = factorO)
+		
+		const cameron = new Medico(dosis = 10, cantidadDeCelulas = 10000, enfermedades = [malaria1000], grupoSanguineo = factorO)
+		
+		const house = new JefeDeDepartamento(subordinados = #{foreman}, cantidadDeCelulas = 3000000, grupoSanguineo = factorO)
+		
+		house.atenderA(cameron)
+		
+		assert.equals([940], cameron.enfermedades().map({unaEnfermedad => unaEnfermedad.cantidadCelulasAmenazadas()}))
+		
+	}
+	
+	test "Cameron contrae malaria" {
+		const malaria1500 = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 1500)
+		const cameron = new Medico(dosis = 10, cantidadDeCelulas = 1000000, grupoSanguineo = factorO)
+
+		cameron.contraerEnfermedad(malaria1500)
+
+		assert.equals(1350, malaria1500.cantidadCelulasAmenazadas())
+	}
+
+	test "House contrae malaria" {
+		const malaria1500 = new EnfermedadInfecciosa(cantidadCelulasAmenazadas = 1500)
+		const cameron = new Medico(dosis = 10, cantidadDeCelulas = 1000000, grupoSanguineo = factorO)
+		const house = new JefeDeDepartamento(subordinados = #{cameron}, cantidadDeCelulas = 3000000, grupoSanguineo = factorO)
+		
+		house.contraerEnfermedad(malaria1500)
+
+		assert.equals(1350, malaria1500.cantidadCelulasAmenazadas())
+	}
+
+}
+
+
+describe "Donaciones" {
+	
+	test "Cameron no le dona a House 1100 células porque no tiene células suficientes" {
+		const cameron = new Medico(dosis = 10, cantidadDeCelulas = 4000, grupoSanguineo = factorA)
+		const house = new JefeDeDepartamento(subordinados = #{cameron}, cantidadDeCelulas = 3000000, grupoSanguineo = factorO)
+		
+		assert.throwsExceptionWithMessage("No se pudo donar por falta de células", { cameron.donarA(house, 1100) })
+	}
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
